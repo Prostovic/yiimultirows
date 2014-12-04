@@ -150,3 +150,155 @@ $this->Widget(
 Copy this extension to protected/extensions/multirows directory.
 
 ##### Now you can see "Main" record form with ability to add, remove, change "Slave" records.
+
+## Prepare "Main" controller to validate, create, delete records
+
+#### Create and update "Main" record
+I will simplify actions and use only one (actionUpdate):
+
+```
+	public function actionCreate()
+	{
+		$this->actionUpdate(); // this is to simplify code
+/*
+ *************************************************************
+ *                                                           *
+ * Next in this comment block is standart CRUD creation code *
+ * Wi will not use it                                        *
+ *                                                           *
+ *************************************************************
+		$model=new Main;
+
+		// Uncomment the following line if AJAX validation is needed
+		// $this->performAjaxValidation($model);
+
+		if(isset($_POST['Main']))
+		{
+			$model->attributes=$_POST['Main'];
+			if($model->save())
+				$this->redirect(array('view','id'=>$model->id));
+		}
+
+		$this->render('create',array(
+			'model'=>$model,
+		));
+*/
+	}
+
+	/**
+	 *
+	 *
+	 *
+	 */
+	public function actionUpdate($id=0)
+	{
+		/*
+		 ******************************************************
+		 *   This part is to simplify create and update code  *
+		 ******************************************************
+		 */
+		if( $id == 0 ) {
+			$model = new Main;
+		}
+		else {
+			$model = $this->loadModel($id);
+		}
+
+		/*
+		 ******************************************************
+		 *   This part is to use function with Slave records  *
+		 ******************************************************
+		 */
+		$this->attachBehavior('MultirowsBehavior', array(
+			'class' => 'ext.multirows.MultirowsBehavior',
+		));
+		
+		/*
+		 ******************************************************
+		 *   Ajax validation Main and Slave records           *
+		 ******************************************************
+		 */
+		$this->ajaxValidateMultirow(
+			array(
+				array('model' => $model,  ), // Main record
+				array('model' => 'Slave', ), // Slave record model name, we can use any slave models
+				// array('model' => 'Addition', ), // another Slave model
+			),
+			'main-form' // id Main edit form
+		);
+
+		if( isset($_POST['Main']) ) {
+
+		/*
+		 *************************************************************
+		 *   Save Main and Slave records (replacment standart code)  *
+		 *************************************************************
+		 */
+			$errors = $this->saveMultirow(
+				$model, // Main model
+				array( // Array with slave models, we can use string with model name ore array with key 'model' and it's value of model name
+					'Slave', // Slave models
+					// array('model' => 'Addition', ), // another Slave models
+				)
+			);
+
+			if( count($errors) == 0 ) {
+				$this->redirect(array('admin'));
+			}
+		/*
+		 ******************************************************
+		 *   Next block is standart CRUD creation text        *
+		 ******************************************************
+			$model->attributes=$_POST['Main'];
+			if($model->save())
+				$this->redirect(array('view','id'=>$model->id));
+*/
+		}
+
+		$this->render('update',array(
+			'model'=>$model,
+		));
+	}
+```
+
+#### Delete "Main" record
+
+```
+	public function actionDelete($id)
+	{
+		/*
+		 ******************************************************
+		 *   Next block is standart CRUD creation text        *
+		 ******************************************************
+		$this->loadModel($id)->delete();
+*/
+		/*
+		 ******************************************************
+		 *   This part is to use function with Slave records  *
+		 ******************************************************
+		 */
+		$model = $this->loadModel($id);
+		$this->attachBehavior('MultirowsBehavior', array(
+			'class' => 'ext.multirows.MultirowsBehavior',
+		));
+
+		/*
+		 *************************************************************
+		 *  Remove Main and Slave records                            *
+		 *************************************************************
+		 */
+		$this->deleteMultirow(
+			$model,  // Main model
+			array(   // Array with slave models, we can use string with model name ore array with key 'model' and it's value of model name
+				'Slave', // Slave models
+				// array('model' => 'Addition', ), // another Slave models
+			)
+		);
+
+		// if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
+		if(!isset($_GET['ajax']))
+			$this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('admin'));
+	}
+```
+
+##### Now you can edit, validate and delete "Main" record with all "Slave" records.
