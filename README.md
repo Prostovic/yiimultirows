@@ -302,3 +302,5 @@ I will simplify actions and use only one (actionUpdate):
 ```
 
 ##### Now you can edit, validate and delete "Main" record with all "Slave" records.
+
+File test.zip contain test application with one Main and two Slave models. You can add, change, delete records. SQL script to create tables is in this file to.
